@@ -20,6 +20,19 @@ pipeline {
             - mountPath: "/home/default/.kube"
               name: "dot-kube"
               readOnly: false
+          - name: eks
+            image: eclipsefdn/aws:alpine-latest
+            command:
+            - cat
+            tty: true
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+            volumeMounts:
+            - mountPath: "/home/default/.kube"
+              name: "dot-kube"
+              readOnly: false
           - name: jnlp
             resources:
               limits:
@@ -118,6 +131,27 @@ pipeline {
           withKubeConfig([credentialsId: 'ci-bot-okd-c1-token', serverUrl: 'https://api.okd-c1.eclipse.org:6443']) {
             sh '''
               ./kubernetes/helm-deploy.sh production "${IMAGE_TAG}"
+            '''
+          }
+        }
+      }
+    }
+
+    stage('Deploy aws-production') {
+      when {
+        branch 'aws-production'
+      }
+      steps {
+        container('eks') {
+          withCredentials([
+            string(credentialsId: 'jenkins-openvsx-aws-key-id',     variable: 'AWS_ACCESS_KEY_ID'),
+            string(credentialsId: 'jenkins-openvsx-aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+          ]) {
+            sh '''
+              set -e
+              export AWS_DEFAULT_REGION=eu-central-1
+              aws eks update-kubeconfig --name eks-production-openvsx --region eu-central-1
+              ./kubernetes/helm-deploy.sh aws-production "${IMAGE_TAG}"
             '''
           }
         }
