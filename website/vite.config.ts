@@ -4,7 +4,7 @@ import webfontDownload from 'vite-plugin-webfont-dl';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, type PluginOption } from 'vite';
 
-const outRootDir = path.join(__dirname, 'dist');
+const outRootDir = path.join(import.meta.dirname, 'dist');
 
 export default defineConfig(() => ({
   plugins: [react(), webfontDownload(), visualizer() as PluginOption],
@@ -16,9 +16,14 @@ export default defineConfig(() => ({
     port: 3000
   },
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src')
-    }
+    alias: [
+      { find: '@', replacement: path.resolve(import.meta.dirname, './src') },
+      // @mui/icons-material's deep imports (e.g. '@mui/icons-material/Menu') resolve to
+      // CJS files that Rolldown's dep optimizer/bundler unwraps incorrectly, yielding the
+      // module's exports object instead of the icon component (React error #130). The
+      // 'esm/' subpath ships genuine ESM sources that don't hit that interop path.
+      { find: /^@mui\/icons-material\/(?!esm\/|utils\/)(.+)$/, replacement: '@mui/icons-material/esm/$1' }
+    ]
   },
   publicDir: 'static',
   build: {
@@ -32,12 +37,7 @@ export default defineConfig(() => ({
       output: {
         entryFileNames: 'bundle-[hash].js',
         assetFileNames: '[name]-[hash][extname]',
-        chunkFileNames: 'chunk-[name]-[hash].js',
-        manualChunks: {
-            lodash: ['lodash'],
-            material: ['@mui/material'],
-            'mui-x': ['@mui/x-charts', '@mui/x-data-grid', '@mui/x-date-pickers'],
-        }
+        chunkFileNames: 'chunk-[name]-[hash].js'
       }
     }
   }

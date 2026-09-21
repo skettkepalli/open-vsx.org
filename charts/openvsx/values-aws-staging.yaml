@@ -18,7 +18,7 @@ autoscaling:
 keda:
   enabled: true
   clusterName: eks-staging-openvsx
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 4
   thresholdBusyRatio: "0.5"
   prometheusAddress: "https://prometheus-prod-32-prod-ca-east-0.grafana.net/api/prom"
@@ -56,7 +56,10 @@ externalSecrets:
   refreshInterval: 1h
   fastlyLogsBucket: "fastlyopenvsxorgstaging"
   storageBucket: "openvsxorgstaging"
-  elasticsearchClearOnStart: true
+  # Soft init — a pod builds the index only if missing. `true` made every pod start wipe the
+  # shared index; freshness comes from incremental writes + the daily 04:00 UTC JobRunr job.
+  # Hard rebuild on demand: POST /admin/update-search-index.
+  elasticsearchClearOnStart: false
   # Read the ES elastic password straight from the ECK secret (deployment.yaml) instead of SM/ESO —
   # app comes up green on first deploy, no bootstrap script, self-heals on ECK password rotation.
   elasticsearchPasswordFromEck: true
@@ -71,6 +74,26 @@ inClusterPostgres:
   passwordSecret:
     name: "staging-postgresql-ha-postgresql"
     key: "password"
+
+# ── Logical Postgres backup ───────────────────────────────────────────────────
+# The in-cluster postgresql-ha PVCs are gp3/reclaimPolicy=Delete with no EBS snapshots,
+# so this dump is staging's only recovery point. Reuses the same ESO-pinned credential
+# secret as the app (inClusterPostgres.passwordSecret above) — no second credential path.
+# IRSA: dedicated write-only role (s3:PutObject + s3:AbortMultipartUpload on
+# arn:aws:s3:::eclipse-openvsx-db-backups/staging/* only) — deliberately NOT an extra
+# statement on openvsx-app-staging. The SA name is the IRSA trust subject, so it must
+# stay equal to the one the role's trust policy names.
+dbBackup:
+  enabled: true
+  s3:
+    bucket: "eclipse-openvsx-db-backups"
+    prefix: "staging"
+    region: eu-central-1
+  serviceAccount:
+    create: true
+    name: openvsx-pg-backup
+    annotations:
+      eks.amazonaws.com/role-arn: "arn:aws:iam::365555376529:role/openvsx-pg-backup-staging"
 
 serviceMonitors:
   platformMetrics:

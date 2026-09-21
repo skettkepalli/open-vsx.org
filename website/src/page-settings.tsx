@@ -15,7 +15,7 @@ import Typography from '@mui/material/Typography';
 import { Theme } from '@mui/material/styles/createTheme';
 import { SxProps } from '@mui/system/styleFunctionSx/styleFunctionSx';
 import { Helmet, HelmetTags } from 'react-helmet-async';
-import { Link as RouteLink, Route, useParams } from 'react-router-dom';
+import { Link as RouteLink, Route, useParams } from 'react-router';
 import { PageSettings, Extension, NamespaceDetails, OpenVsxMark } from 'openvsx-webui';
 import { ExtensionListRoutes } from 'openvsx-webui/lib/pages/extension-list/extension-list-routes';
 import { DefaultMenuContent, MobileMenuContent } from './menu-content';
@@ -222,23 +222,29 @@ export default function createPageSettings(theme: Theme, prefersDarkMode: boolea
   };
 
   //---------- CLAIM NAMESPACE LINK
-  const claimNamespace: FunctionComponent<{ extension: Extension; sx: SxProps<Theme> }> = ({ sx, extension }) => {
-    const title = `Claiming namespace \`${extension.namespace}\``;
+  // The namespace settings page asks for this without an extension to hand, so the namespace comes
+  // as its own prop. An extension is only passed where one is in view, and the extension overview
+  // offers the link for every extension, so a verified namespace still has to opt out here.
+  const claimNamespace: FunctionComponent<{ namespace: string; extension?: Extension; sx?: SxProps<Theme> }> = ({
+    namespace,
+    extension,
+    sx
+  }) => {
+    if (extension?.verified) {
+      return null;
+    }
+    const title = `Claiming namespace \`${namespace}\``;
 
     return (
-      <>
-        {!extension.verified && (
-          <Link
-            href={`https://github.com/EclipseFdn/open-vsx.org/issues/new?template=claim-namespace-ownership.yml&namespace=${encodeURIComponent(extension.namespace)}&title=${encodeURIComponent(title)}`}
-            target='_blank'
-            variant='body2'
-            color='secondary'
-            underline='hover'
-            sx={sx}>
-            Claim Ownership
-          </Link>
-        )}
-      </>
+      <Link
+        href={`https://github.com/EclipseFdn/open-vsx.org/issues/new?template=claim-namespace-ownership.yml&namespace=${encodeURIComponent(namespace)}&title=${encodeURIComponent(title)}`}
+        target='_blank'
+        variant='body2'
+        color='secondary'
+        underline='hover'
+        sx={sx}>
+        Claim Ownership
+      </Link>
     );
   };
 
@@ -247,7 +253,7 @@ export default function createPageSettings(theme: Theme, prefersDarkMode: boolea
     brand: {
       logo: <OpenVsxMark />,
       name: 'Open VSX Registry',
-      description: 'An open-source, vendor-neutral registry for VS Code–compatible extensions.'
+      description: 'An open source, vendor-neutral registry for VS Code–compatible extensions.'
     },
     columns: [
       {
@@ -351,7 +357,8 @@ export default function createPageSettings(theme: Theme, prefersDarkMode: boolea
     urls: {
       extensionDefaultIcon: '/default-icon.png',
       namespaceAccessInfo: 'https://github.com/eclipse-openvsx/openvsx/wiki/Namespace-Access',
-      publisherAgreement: '/documents/publisher-agreement-v1.1.md'
+      publisherAgreement: '/documents/publisher-agreement-v1.1.md',
+      trustedPublishing: 'https://github.com/eclipse-openvsx/openvsx/wiki/Trusted-Publishing'
     }
   };
 }

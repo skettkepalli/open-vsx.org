@@ -8,35 +8,31 @@
  * SPDX-License-Identifier: EPL-2.0
  ********************************************************************************/
 
-import { FunctionComponent, PropsWithChildren, useState, useRef, useContext } from 'react';
+import { forwardRef, FunctionComponent, PropsWithChildren, useState, useRef, useContext } from 'react';
 import Link from '@mui/material/Link';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
-import { styled, alpha } from '@mui/material/styles';
-import { Link as RouteLink, useNavigate } from 'react-router-dom';
+import { styled } from '@mui/material/styles';
+import { Link as RouteLink } from 'react-router';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ArrowOutwardIcon from '@mui/icons-material/ArrowOutward';
-import GitHubIcon from '@mui/icons-material/GitHub';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import InfoIcon from '@mui/icons-material/Info';
 import StarIcon from '@mui/icons-material/Star';
 import StatusIcon from '@mui/icons-material/NetworkCheck';
 import PublishIcon from '@mui/icons-material/Publish';
-import GroupWorkIcon from '@mui/icons-material/GroupWork';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import HubIcon from '@mui/icons-material/Hub';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import BusinessIcon from '@mui/icons-material/Business';
 import SecurityIcon from '@mui/icons-material/Security';
-import { UserSettingsRoutes } from 'openvsx-webui/lib/pages/user/user-settings-routes';
+import { PublishRoutes } from 'openvsx-webui/lib/pages/publish/publish-routes';
 import { MainContext } from 'openvsx-webui/lib/context';
 import { itemIcon, MobileUserAvatar, headerItem, MenuLink, MenuItemText } from 'openvsx-webui/lib/default/menu-content';
-import { KbdKey } from 'openvsx-webui/lib/components/kbd-key';
-import { useShortcut } from 'openvsx-webui/lib/hooks/use-shortcut';
+import { PublishButton } from 'openvsx-webui/lib/components/publish/publish-button';
 import { LoginComponent } from 'openvsx-webui/lib/default/login';
 import { UserAvatar } from 'openvsx-webui/lib/pages/user/avatar';
 
@@ -52,9 +48,6 @@ const ExternalLinkLabel: FunctionComponent<PropsWithChildren> = ({ children }) =
 
 export const MobileMenuContent: FunctionComponent = () => {
   const { user, loginProviders } = useContext(MainContext);
-  const [workingGroupOpen, setWorkingGroupOpen] = useState(false);
-  const workingGroupAnchor = useRef<HTMLLIElement | null>(null);
-  const closeWorkingGroup = () => setWorkingGroupOpen(false);
   return (
     <>
       {loginProviders &&
@@ -75,78 +68,54 @@ export const MobileMenuContent: FunctionComponent = () => {
             }}
           />
         ))}
-      {loginProviders && !location.pathname.startsWith(UserSettingsRoutes.ROOT) && (
-        <MenuItem component={RouteLink} to='/user-settings/extensions'>
+      {loginProviders && !location.pathname.startsWith(PublishRoutes.ROOT) && (
+        <MenuItem component={RouteLink} to={PublishRoutes.ROOT}>
           <MenuItemText>
             <PublishIcon sx={itemIcon} />
-            Publish Extension
+            Publish
           </MenuItemText>
         </MenuItem>
       )}
-      <MenuItem component={Link} href='https://github.com/eclipse-openvsx/openvsx'>
-        <MenuItemText>
-          <GitHubIcon sx={itemIcon} />
-          Source Code
-        </MenuItemText>
-      </MenuItem>
-      <MenuItem component={Link} href='https://managed.open-vsx.org/'>
+      <MenuItem component={Link} href='https://managed.open-vsx.org/' target='_blank' rel='noopener'>
         <MenuItemText>
           <BusinessIcon sx={itemIcon} />
-          Commercial Usage
+          <ExternalLinkLabel>Commercial usage</ExternalLinkLabel>
         </MenuItemText>
       </MenuItem>
-      <MenuItem component={Link} href='https://researcher-recognition.open-vsx.org'>
+      <MenuItem component={Link} href='https://researcher-recognition.open-vsx.org' target='_blank' rel='noopener'>
         <MenuItemText>
           <SecurityIcon sx={itemIcon} />
-          Report a Vulnerability
+          <ExternalLinkLabel>Report a vulnerability</ExternalLinkLabel>
         </MenuItemText>
       </MenuItem>
-      <MenuItem component={Link} href='https://github.com/EclipseFdn/open-vsx.org/wiki'>
-        <MenuItemText>
-          <MenuBookIcon sx={itemIcon} />
-          Documentation
-        </MenuItemText>
-      </MenuItem>
-      <MenuItem component={Link} href='https://status.open-vsx.org/'>
-        <MenuItemText>
-          <StatusIcon sx={itemIcon} />
-          Status
-        </MenuItemText>
-      </MenuItem>
-      <MenuItem
-        ref={workingGroupAnchor}
-        onClick={() => setWorkingGroupOpen(true)}
-        aria-haspopup='menu'
-        aria-expanded={workingGroupOpen}>
-        <MenuItemText>
-          <GroupWorkIcon sx={itemIcon} />
-          Working Group
-        </MenuItemText>
-        <MoreVertIcon fontSize='small' sx={{ ml: 'auto', color: 'text.secondary' }} />
-      </MenuItem>
-      <Menu
-        open={workingGroupOpen}
-        anchorEl={workingGroupAnchor.current}
-        onClose={closeWorkingGroup}
-        anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
-        <MenuItem component={RouteLink} to='/members' onClick={closeWorkingGroup}>
-          <MenuItemText>
-            <PeopleAltIcon sx={itemIcon} />
-            Members
-          </MenuItemText>
-        </MenuItem>
-        <MenuItem component={RouteLink} to='/adopters' onClick={closeWorkingGroup}>
-          <MenuItemText>
-            <HubIcon sx={itemIcon} />
-            Adopters
-          </MenuItemText>
-        </MenuItem>
-      </Menu>
-      <MenuItem component={Link} href='https://www.eclipse.org/donate/openvsx/'>
+      <MenuItem component={Link} href='https://www.eclipse.org/donate/openvsx/' target='_blank' rel='noopener'>
         <MenuItemText>
           <StarIcon sx={itemIcon} />
-          Sponsor
+          <ExternalLinkLabel>Sponsor</ExternalLinkLabel>
+        </MenuItemText>
+      </MenuItem>
+      <MenuItem component={Link} href='https://status.open-vsx.org/' target='_blank' rel='noopener'>
+        <MenuItemText>
+          <StatusIcon sx={itemIcon} />
+          <ExternalLinkLabel>Status</ExternalLinkLabel>
+        </MenuItemText>
+      </MenuItem>
+      <MenuItem component={Link} href='https://github.com/EclipseFdn/open-vsx.org/wiki' target='_blank' rel='noopener'>
+        <MenuItemText>
+          <MenuBookIcon sx={itemIcon} />
+          <ExternalLinkLabel>Documentation</ExternalLinkLabel>
+        </MenuItemText>
+      </MenuItem>
+      <MenuItem component={RouteLink} to='/members'>
+        <MenuItemText>
+          <PeopleAltIcon sx={itemIcon} />
+          Members
+        </MenuItemText>
+      </MenuItem>
+      <MenuItem component={RouteLink} to='/adopters'>
+        <MenuItemText>
+          <HubIcon sx={itemIcon} />
+          Adopters
         </MenuItemText>
       </MenuItem>
       <MenuItem component={RouteLink} to='/about'>
@@ -160,6 +129,77 @@ export const MobileMenuContent: FunctionComponent = () => {
 };
 
 //-------------------- Default View --------------------//
+
+// A menu entry that opens its children in a flyout submenu. It forwards the ref
+// and props `MenuList` injects onto its trigger `MenuItem`, so the trigger takes
+// part in the parent menu's keyboard navigation like any other item. `onClose`
+// closes the parent menu; clicking any child closes the whole chain.
+type SubMenuItemProps = PropsWithChildren<{ label: string; onClose: () => void }>;
+const SubMenuItem = forwardRef<HTMLLIElement, SubMenuItemProps>(
+  ({ label, onClose, children, ...menuListProps }, ref) => {
+    const [open, setOpen] = useState(false);
+    const anchor = useRef<HTMLLIElement | null>(null);
+    const close = () => setOpen(false);
+    const closeAll = () => {
+      close();
+      onClose();
+    };
+    const menuId = `${label.toLowerCase().replace(/\s+/g, '-')}-submenu`;
+    return (
+      <>
+        <MenuItem
+          {...menuListProps}
+          ref={(node) => {
+            anchor.current = node;
+            if (typeof ref === 'function') {
+              ref(node);
+            } else if (ref) {
+              ref.current = node;
+            }
+          }}
+          onClick={() => setOpen(true)}
+          onKeyDown={(event) => {
+            if (event.key === 'ArrowRight' || event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              setOpen(true);
+            }
+          }}
+          aria-haspopup='menu'
+          aria-expanded={open}
+          aria-controls={open ? menuId : undefined}
+          sx={{ justifyContent: 'space-between', gap: 3 }}>
+          <MenuItemText>{label}</MenuItemText>
+          <ChevronRightIcon fontSize='small' sx={{ color: 'text.secondary', mr: '-13px' }} />
+        </MenuItem>
+        <Menu
+          id={menuId}
+          open={open}
+          anchorEl={anchor.current}
+          onClose={close}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+          MenuListProps={{
+            onClick: closeAll,
+            // Keystrokes must not bubble through the portal to the parent
+            // `MenuList`, which would steal focus back. stopPropagation also cuts
+            // off the modal's own Escape and Tab handling, so both live here.
+            onKeyDown: (event) => {
+              event.stopPropagation();
+              if (event.key === 'ArrowLeft' || event.key === 'Escape') {
+                close();
+              } else if (event.key === 'Tab') {
+                event.preventDefault();
+                closeAll();
+              }
+            }
+          }}>
+          {children}
+        </Menu>
+      </>
+    );
+  }
+);
+SubMenuItem.displayName = 'SubMenuItem';
 
 // A text button styled like the header links (reusing the library's `headerItem`),
 // used as the trigger for the Resources dropdown.
@@ -177,22 +217,15 @@ const ResourcesTrigger = styled('button')(({ theme }) => ({
 // header stays clean; only Publish and the account control remain top-level.
 export const DefaultMenuContent: FunctionComponent = () => {
   const { loginProviders, user } = useContext(MainContext);
-  const navigate = useNavigate();
   const [resourcesOpen, setResourcesOpen] = useState(false);
   const resourcesAnchor = useRef<HTMLButtonElement | null>(null);
   const closeResources = () => setResourcesOpen(false);
 
-  useShortcut({
-    key: 'p',
-    label: 'Publish',
-    order: 3,
-    callback: () => navigate(UserSettingsRoutes.EXTENSIONS),
-    enabled: !!loginProviders
-  });
-
   return (
     <>
-      <MenuLink href='https://researcher-recognition.open-vsx.org'>Report a Vulnerability</MenuLink>
+      <MenuLink href='https://managed.open-vsx.org/' target='_blank' rel='noopener'>
+        <ExternalLinkLabel>Commercial usage</ExternalLinkLabel>
+      </MenuLink>
       <ResourcesTrigger
         ref={resourcesAnchor}
         onClick={() => setResourcesOpen(true)}
@@ -209,58 +242,61 @@ export const DefaultMenuContent: FunctionComponent = () => {
         onClose={closeResources}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}>
-        <MenuItem component={Link} href='https://managed.open-vsx.org/' onClick={closeResources}>
+        <MenuItem
+          component={Link}
+          href='https://researcher-recognition.open-vsx.org'
+          target='_blank'
+          rel='noopener'
+          onClick={closeResources}>
           <MenuItemText>
-            <ExternalLinkLabel>Commercial Usage</ExternalLinkLabel>
+            <ExternalLinkLabel>Report a vulnerability</ExternalLinkLabel>
           </MenuItemText>
         </MenuItem>
-        <MenuItem component={Link} href='https://github.com/EclipseFdn/open-vsx.org/wiki' onClick={closeResources}>
-          <MenuItemText>
-            <ExternalLinkLabel>Documentation</ExternalLinkLabel>
-          </MenuItemText>
-        </MenuItem>
-        <MenuItem component={Link} href='https://status.open-vsx.org/' onClick={closeResources}>
-          <MenuItemText>
-            <ExternalLinkLabel>Status</ExternalLinkLabel>
-          </MenuItemText>
-        </MenuItem>
-        <MenuItem component={RouteLink} to='/members' onClick={closeResources}>
-          <MenuItemText>Members</MenuItemText>
-        </MenuItem>
-        <MenuItem component={RouteLink} to='/adopters' onClick={closeResources}>
-          <MenuItemText>Adopters</MenuItemText>
-        </MenuItem>
-        <MenuItem component={Link} href='https://www.eclipse.org/donate/openvsx/' onClick={closeResources}>
+        <MenuItem
+          component={Link}
+          href='https://www.eclipse.org/donate/openvsx/'
+          target='_blank'
+          rel='noopener'
+          onClick={closeResources}>
           <MenuItemText>
             <ExternalLinkLabel>Sponsor</ExternalLinkLabel>
           </MenuItemText>
         </MenuItem>
+        <MenuItem
+          component={Link}
+          href='https://status.open-vsx.org/'
+          target='_blank'
+          rel='noopener'
+          onClick={closeResources}>
+          <MenuItemText>
+            <ExternalLinkLabel>Status</ExternalLinkLabel>
+          </MenuItemText>
+        </MenuItem>
+        <MenuItem
+          component={Link}
+          href='https://github.com/EclipseFdn/open-vsx.org/wiki'
+          target='_blank'
+          rel='noopener'
+          onClick={closeResources}>
+          <MenuItemText>
+            <ExternalLinkLabel>Documentation</ExternalLinkLabel>
+          </MenuItemText>
+        </MenuItem>
+        <SubMenuItem label='Working group' onClose={closeResources}>
+          <MenuItem component={RouteLink} to='/members'>
+            <MenuItemText>Members</MenuItemText>
+          </MenuItem>
+          <MenuItem component={RouteLink} to='/adopters'>
+            <MenuItemText>Adopters</MenuItemText>
+          </MenuItem>
+        </SubMenuItem>
         <MenuItem component={RouteLink} to='/about' onClick={closeResources}>
           <MenuItemText>About</MenuItemText>
         </MenuItem>
       </Menu>
       {loginProviders && (
         <>
-          <Button
-            variant='text'
-            color='secondary'
-            component={RouteLink}
-            to={UserSettingsRoutes.EXTENSIONS}
-            sx={(theme) => ({
-              mx: 0.5,
-              px: 2.25,
-              py: 1,
-              fontWeight: 600,
-              fontSize: '0.8125rem',
-              borderRadius: `${theme.shape.borderRadius}px`,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.4375rem',
-              '&:hover': { backgroundColor: alpha(theme.palette.secondary.main, 0.08) }
-            })}>
-            Publish
-            <KbdKey>p</KbdKey>
-          </Button>
+          <PublishButton />
           {user ? (
             <UserAvatar />
           ) : (

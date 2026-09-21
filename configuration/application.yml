@@ -98,6 +98,8 @@ management:
 
 springdoc:
   model-and-view-allowed: true
+  api-docs:
+    version: openapi_3_0
   swagger-ui:
     path: /swagger-ui
     docExpansion: list
@@ -124,7 +126,7 @@ bucket4j:
 
 ovsx:
   access-token:
-    prefix: staging_ovsxat_
+    prefix: staging_ovsx
     expiration: P90D
     notification: P7D
     send-expired-mail: true
@@ -139,8 +141,11 @@ ovsx:
     migration:
       enabled: false
     primary-service: aws
+  server:
+    url: "https://staging.open-vsx.org"
   webui:
-    frontendRoutes: "/extension/**,/namespace/**,/user-settings/**,/admin-dashboard/**,/about,/publisher-agreement-*,/terms-of-use,/members,/adopters,/error"
+    url: "https://staging.open-vsx.org"
+    frontendRoutes: "/extension/**,/namespace/**,/search,/user-settings/**,/admin-dashboard/**,/publish,/about,/publisher-agreement-*,/terms-of-use,/members,/adopters,/error"
     additional-routes: "/.well-known/**"
   eclipse:
     base-url: https://api.eclipse.org/
@@ -161,8 +166,10 @@ ovsx:
       downloads: 2.0
       timestamp: 1.2
   migrations:
+    batch-size: 200
+    cron: '0 */2 * * * *'
     delay:
-      seconds: 10800
+      seconds: 60
     once-per-version: true
   extension-control:
     # do not update on application start as this would trigger multiple jobs in multi-pod configuration
@@ -172,12 +179,15 @@ ovsx:
   registry:
     version: <SERVER_VERSION>
   caching:
+    statistics:
+      enabled: true
     files-extension:
       tti: PT1H
       max-size: 200
     files-webresource:
       tti: PT1H
       max-size: 500
+      max-total-size: 2147483648 # 2 GB
     files-browse:
       tti: PT1H
       max-size: 100
@@ -214,9 +224,9 @@ ovsx:
     # for internal requests from within the cluster check first if "X-Forwarded-For" is set, otherwise use the remote addr.
     # jetty seems to return "[127.0.0.1]" as remote addr in some cases, need to investigate why this is happening
     ip-address-function: '(getHeader("X-Fastly-Real-IP")?: getHeader("X-Real-IP")?: getHeader("X-Forwarded-For")?: getRemoteAddr()).split(",")[0].trim()'
-    usage-stats:
-      job-schedule: '*/30 * * * * *'
-      daily-job-schedule: '*/30 * * * * *'
+    #usage-stats:
+    #  job-schedule: '*/30 * * * * *'
+    #  daily-job-schedule: '*/30 * * * * *'
     filters:
       - url: '/(api|vscode)/.*'
         http-response-headers:
@@ -232,6 +242,12 @@ ovsx:
         "documentation": "https://github.com/EclipseFdn/open-vsx.org/wiki/Rate-Limiting",
         "contact": "infrastructure@eclipse-foundation.org"
       }
+
+  trusted-publishing:
+    enabled: true
+    audience: 'https://staging.open-vsx.org'
+    active-providers: 'github'
+    token-expiration: 'PT5M'
 
   # General scanning support
   scanning:
@@ -276,6 +292,13 @@ ovsx:
       # Timeout & Performance
       timeout-seconds: 10
       timeout-check-interval: 100
+
+    namespace-ownership-check:
+      enabled: true
+      enforced: true
+      required: true
+      check-active-extensions: false
+      gallery-url: 'https://marketplace.visualstudio.com/_apis/public/gallery'
 
     configured:
       # ClamAV REST wrapper - our custom Go service with file-level reporting
